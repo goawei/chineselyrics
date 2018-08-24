@@ -3,13 +3,16 @@ import { Dispatch, bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 const pinyin = require('pinyin');
 import { clearSongInput } from 'src/actions/songInput';
+import { loadSongs } from 'src/actions/saveSong';
 
 // Components
 import SongInput from './songInput';
+import SaveSong from './saveSong';
 
 interface IDisplayProps {
     songInput: string;
     clearSongInput: (input: string) => Dispatch<Object>;
+    loadSongs: (input: any) => Dispatch<Object>;
 }
 
 interface IDisplayState {
@@ -25,8 +28,22 @@ class Display extends React.Component<IDisplayProps, IDisplayState> {
             songArray: [],
             activeRows: [],
 
-            displaySongInput: true
+            displaySongInput: true,
         };
+    }
+    componentDidMount() {
+        let savedSongs: any = localStorage.getItem('saveSongs');
+        let activeSong: any = localStorage.getItem('activeSong');
+        if (activeSong) {
+            this.setState({ 
+                songArray: JSON.parse(activeSong),
+                displaySongInput: false
+            });
+        }
+        if (savedSongs) {
+            // console.log(JSON.parse(savedSongs));
+            this.props.loadSongs(JSON.parse(savedSongs));
+        }
     }
     handleSubmit = () => {
         if (this.props.songInput.length === 0) {
@@ -85,6 +102,7 @@ class Display extends React.Component<IDisplayProps, IDisplayState> {
             }
         });
         this.setState({ songArray });
+        localStorage.setItem('activeSong', JSON.stringify(songArray));
         this.handleCloseModal();
     }
     handleRowClick = (index: number) => {
@@ -95,24 +113,32 @@ class Display extends React.Component<IDisplayProps, IDisplayState> {
     handleOpenModal = () => {
         this.setState({
             displaySongInput: true,
-            songArray: [],
-            activeRows: []
+            // songArray: [],
+            // activeRows: []
         });
     }
     handleCloseModal = () => {
         this.setState({ displaySongInput: false });
     }
+    handleLoadSong = (songArray: any) => {
+        this.setState({ songArray: songArray });
+        localStorage.setItem('activeSong', JSON.stringify(songArray));
+    }
     render() {
         return (
             <div className="display-container">
-                {this.state.displaySongInput ? <SongInput handleSubmit={this.handleSubmit} /> : null}
+                <SaveSong lyrics={this.state.songArray} handleLoadSong={this.handleLoadSong} handleSongInputModal={this.handleOpenModal} />
+                {/* {this.state.displaySongInput ? <SongInput handleSubmit={this.handleSubmit} handleCloseModal={this.handleCloseModal} /> : null} */}
+                <SongInput handleSubmit={this.handleSubmit} handleCloseModal={this.handleCloseModal} openModal={this.state.displaySongInput} />
                 <div className="song-container">
-                    {
-                        this.state.displaySongInput ? null :
-                            <div className="open-modal-button" onClick={this.handleOpenModal}>
-                                <i className="fa fa-upload" />
-                            </div>
-                    }
+                    {/* <div className="icon-button-list">
+                        <div className="icon-button" onClick={this.handleOpenModal}>
+                            <i className="fa fa-upload" />
+                        </div>
+                        <div className="icon-button" onClick={this.handleOpenModal}>
+                            <i className="fa fa-music" />
+                        </div>
+                    </div> */}
                     {
                         this.state.songArray.map((row, index) => {
                             return (
@@ -156,7 +182,8 @@ function mapStateToProps(state: any) {
 function mapDispatchToProps(dispatch: Dispatch<Object>) {
     return bindActionCreators(
         {
-            clearSongInput
+            clearSongInput,
+            loadSongs
         },
         dispatch
     );

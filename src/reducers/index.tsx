@@ -3,9 +3,11 @@ import thunk from 'redux-thunk';
 
 // Reducers
 import { songInputReducer } from './songInputReducer';
+import { savedSongReducer } from './savedSongsReducer';
 
 const reducers = combineReducers({
-    songInputReducer
+    songInputReducer,
+    savedSongReducer
 });
 
 const store = createStore(reducers, {}, applyMiddleware(thunk));
