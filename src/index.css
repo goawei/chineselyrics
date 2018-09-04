@@ -9,6 +9,10 @@ textarea {
   resize: none;
 }
 
+input[type="text"] {
+  border: 1px solid black;
+}
+
 #root, .App {
   height: 100%;
 }
