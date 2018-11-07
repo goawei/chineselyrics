@@ -1,21 +1,28 @@
 import * as React from 'react';
 import { Dispatch, bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
-const pinyin = require('pinyin');
+// const pinyin = require('pinyin');
 import { clearSongInput } from 'src/actions/songInput';
 import { loadSongs } from 'src/actions/saveSong';
+import { togglePinyin } from 'src/actions/settings';
+const defaultSongs = require('../model/defaultSongs.json');
+import { patcher1 } from 'src/helpers/patcher';
+import parseSong from 'src/helpers/songParser';
 
 // Components
 import SongInput from './songInput';
 import SaveSong from './saveSong';
 
 interface IDisplayProps {
+    pinyin: boolean;
     songInput: string;
-    clearSongInput: (input: string) => Dispatch<Object>;
-    loadSongs: (input: any) => Dispatch<Object>;
+    clearSongInput: (input: string) => Dispatch<object>;
+    loadSongs: (input: any) => Dispatch<object>;
+    togglePinyin: () => Dispatch<object>;
 }
 
 interface IDisplayState {
+    activeSong: string[];
     songArray: { chinese: string, pinyin: string }[][];
     activeRows: number[];
     displaySongInput: boolean;
@@ -25,6 +32,7 @@ class Display extends React.Component<IDisplayProps, IDisplayState> {
     constructor(props: any) {
         super(props);
         this.state = {
+            activeSong: [],
             songArray: [],
             activeRows: [],
 
@@ -34,75 +42,32 @@ class Display extends React.Component<IDisplayProps, IDisplayState> {
     componentDidMount() {
         let savedSongs: any = localStorage.getItem('saveSongs');
         let activeSong: any = localStorage.getItem('activeSong');
+        console.log(defaultSongs);
         if (activeSong) {
+            const patchedSong = patcher1(activeSong, 'activeSong');
+            const parsedSong = parseSong(patchedSong);
             this.setState({ 
-                songArray: JSON.parse(activeSong),
+                activeSong: patchedSong,
+                songArray: parsedSong,
                 displaySongInput: false
             });
         }
-        if (savedSongs) {
-            // console.log(JSON.parse(savedSongs));
-            this.props.loadSongs(JSON.parse(savedSongs));
+        if (savedSongs && JSON.parse(savedSongs).length > 0) {
+            const patchedSong = patcher1(savedSongs, 'saveSongs');
+            this.props.loadSongs(patchedSong);
+        } else {
+            this.props.loadSongs(defaultSongs);
         }
     }
     handleSubmit = () => {
         if (this.props.songInput.length === 0) {
             return;
         }
-        let songArray: { chinese: string, pinyin: string }[][] = [];
-        this.props.songInput.split('\n').forEach((line) => {
-            let newLine: { chinese: string, pinyin: string }[] = [];
-            let rowArray = line.split('');
-            let tempEnglish = '';
-            for (var i = 0; i < rowArray.length; i++) {
-                if (rowArray[i] !== pinyin(rowArray[i])[0][0]) {
-                    let songArrayItem = { chinese: '', pinyin: '' };
-                    if (tempEnglish === '') {
-                        songArrayItem.chinese = rowArray[i];
-                        songArrayItem.pinyin = pinyin(rowArray[i]);
-                    } else {
-                        songArrayItem.chinese = tempEnglish;
-                        songArrayItem.pinyin = tempEnglish;
-                        i--;
-                    }
-                    newLine.push(songArrayItem);
-                    tempEnglish = '';
-                } else if (rowArray[i] === ' ') {
-                    // let songArrayItem = {
-                    //     chinese: ' ',
-                    //     pinyin: ' '
-                    // };
-                    // newLine.push(songArrayItem);
-                    let songArrayItem = { chinese: '', pinyin: '' };
-                    if (tempEnglish === '') {
-                        songArrayItem.chinese = ' ';
-                        songArrayItem.pinyin = ' ';
-                    } else {
-                        songArrayItem.chinese = tempEnglish;
-                        // songArrayItem.pinyin = tempEnglish;
-                        songArrayItem.pinyin = ' ';
-                        i--;
-                    }
-                    newLine.push(songArrayItem);
-                    tempEnglish = '';
-                } else {
-                    tempEnglish += rowArray[i];
-                    if (i === rowArray.length - 1) {
-                        let songArrayItem = {
-                            chinese: tempEnglish,
-                            pinyin: ' '
-                        };
-                        newLine.push(songArrayItem);
-                        tempEnglish = '';
-                    }
-                }
-            }
-            if (newLine.length > 0) {
-                songArray.push(newLine);
-            }
-        });
-        this.setState({ songArray });
-        localStorage.setItem('activeSong', JSON.stringify(songArray));
+        let activeSong = this.props.songInput.split('\n');
+        let songArray = parseSong(this.props.songInput.split('\n'));
+
+        this.setState({ activeSong, songArray });
+        localStorage.setItem('activeSong', JSON.stringify(activeSong));
         this.handleCloseModal();
     }
     handleRowClick = (index: number) => {
@@ -120,14 +85,26 @@ class Display extends React.Component<IDisplayProps, IDisplayState> {
     handleCloseModal = () => {
         this.setState({ displaySongInput: false });
     }
-    handleLoadSong = (songArray: any) => {
-        this.setState({ songArray: songArray });
+    handleLoadSong = (unparsedSongArray: any) => {
+        let songArray = parseSong(unparsedSongArray);
+        this.setState({ songArray });
         localStorage.setItem('activeSong', JSON.stringify(songArray));
+    }
+    handleScrollTop = () => {
+        document.body.scrollTop = document.documentElement.scrollTop = 0;
     }
     render() {
         return (
             <div className="display-container">
-                <SaveSong lyrics={this.state.songArray} handleLoadSong={this.handleLoadSong} handleSongInputModal={this.handleOpenModal} />
+                <div className="fixed-button-group">
+                    <div className="icon-button scroll-top-button" onClick={this.props.togglePinyin}>
+                        <i className={`fa fa-${this.props.pinyin ? 'comments' : 'comment'}`} />
+                    </div>
+                    <div className="icon-button scroll-top-button" onClick={this.handleScrollTop}>
+                        <i className="fa fa-arrow-up" />
+                    </div>
+                </div>
+                <SaveSong lyrics={this.state.activeSong} handleLoadSong={this.handleLoadSong} handleSongInputModal={this.handleOpenModal} />
                 {/* {this.state.displaySongInput ? <SongInput handleSubmit={this.handleSubmit} handleCloseModal={this.handleCloseModal} /> : null} */}
                 <SongInput handleSubmit={this.handleSubmit} handleCloseModal={this.handleCloseModal} openModal={this.state.displaySongInput} />
                 <div className="song-container">
@@ -157,7 +134,7 @@ class Display extends React.Component<IDisplayProps, IDisplayState> {
                                                 return (
                                                     <li className="song-word" key={index2}>
                                                         <div className="song-chinese">{word.chinese}</div>
-                                                        <div className="song-pinyin">{word.pinyin}</div>
+                                                        {this.props.pinyin ? <div className="song-pinyin">{word.pinyin}</div> : null}
                                                     </li>
                                                 );
                                             })
@@ -175,7 +152,8 @@ class Display extends React.Component<IDisplayProps, IDisplayState> {
 }
 function mapStateToProps(state: any) {
     return {
-        songInput: state.songInputReducer
+        songInput: state.songInputReducer,
+        pinyin: state.pinyinReducer
     };
 }
 
@@ -183,7 +161,8 @@ function mapDispatchToProps(dispatch: Dispatch<Object>) {
     return bindActionCreators(
         {
             clearSongInput,
-            loadSongs
+            loadSongs,
+            togglePinyin
         },
         dispatch
     );

@@ -54,13 +54,14 @@ class SaveSong extends React.Component<ISaveSongProps, ISaveSongState> {
             lyrics: this.props.lyrics
         };
         let existingSong = this.props.savedSongs.filter((song) => song.title === currentSong.title);
-        if (existingSong.length > 0 || currentSong.lyrics.length === 0) {
+        if (existingSong.length > 0 || currentSong.lyrics.length === 0 || currentSong.title.length === 0) {
             this.setState({ inputError: true });
             return;
         }
         this.props.saveSong(currentSong);
         this.setState({ inputError: false });
         let saveLocalObject = this.props.savedSongs.concat(currentSong);
+        console.log(saveLocalObject);
         localStorage.setItem('saveSongs', JSON.stringify(saveLocalObject));
     }
     handleDeleteSong = (title: string) => {

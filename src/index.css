@@ -162,6 +162,20 @@ button:hover {
   transition: 0.5s;
 }
 
+.fixed-button-group {
+  display: flex;
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  z-index: 1;
+}
+.scroll-top-button {
+  /* position: fixed;
+  bottom: 0;
+  right: 0;
+  z-index: 1; */
+}
+
 @media (min-width: 768px) {
   .icon-button-list {
     /* width: 100px;
