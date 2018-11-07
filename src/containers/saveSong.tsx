@@ -61,7 +61,6 @@ class SaveSong extends React.Component<ISaveSongProps, ISaveSongState> {
         this.props.saveSong(currentSong);
         this.setState({ inputError: false });
         let saveLocalObject = this.props.savedSongs.concat(currentSong);
-        console.log(saveLocalObject);
         localStorage.setItem('saveSongs', JSON.stringify(saveLocalObject));
     }
     handleDeleteSong = (title: string) => {

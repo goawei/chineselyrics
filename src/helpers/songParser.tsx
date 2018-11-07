@@ -2,7 +2,6 @@ const pinyin = require('pinyin');
 
 export default (song: string[]) => {
     let songArray: { chinese: string, pinyin: string }[][] = [];
-    // console.log(song);
     song.forEach((line) => {
         let newLine: { chinese: string, pinyin: string }[] = [];
         let rowArray = line.trim().split('');

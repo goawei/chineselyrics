@@ -42,7 +42,6 @@ class Display extends React.Component<IDisplayProps, IDisplayState> {
     componentDidMount() {
         let savedSongs: any = localStorage.getItem('saveSongs');
         let activeSong: any = localStorage.getItem('activeSong');
-        console.log(defaultSongs);
         if (activeSong) {
             const patchedSong = patcher1(activeSong, 'activeSong');
             const parsedSong = parseSong(patchedSong);
