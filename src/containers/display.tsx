@@ -87,7 +87,7 @@ class Display extends React.Component<IDisplayProps, IDisplayState> {
     handleLoadSong = (unparsedSongArray: any) => {
         let songArray = parseSong(unparsedSongArray);
         this.setState({ songArray });
-        localStorage.setItem('activeSong', JSON.stringify(songArray));
+        localStorage.setItem('activeSong', JSON.stringify(unparsedSongArray));
     }
     handleScrollTop = () => {
         document.body.scrollTop = document.documentElement.scrollTop = 0;
